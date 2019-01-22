@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <title>GiiitDeck</title>
     <script>
-      console.log(location.search);
+      let user = location.search.replace("?user=", "");
     </script>
   </head>
   <body>
     <form>
-      <input type="text" name="username" autocomplete="OFF" />
+      <input type="text" name="user" placeholder="username" autocomplete="OFF" />
       <input type="submit" value="Log in" />
     </form>
   </body>
