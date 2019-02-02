@@ -1,16 +1,60 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>GiiitDeck</title>
-    <script>
-      let user = location.search.replace("?user=", "");
-    </script>
-  </head>
-  <body>
-    <form>
-      <input type="text" name="user" placeholder="username" autocomplete="OFF" />
-      <input type="submit" value="Log in" />
-    </form>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <title>GiiitDeck</title>
+        <script>
+            window.onload = async function() {
+                let username = location.search.replace("?username=", "");
+                if (username === "") {
+                    document.body.innerHTML = `
+                        <form>
+                            <input type="text" name="username" placeholder="username" autocomplete="OFF" />
+                            <input type="submit" value="Log in" />
+                        </form>
+                    `;
+                }
+                
+                let user = await get(`https://api.github.com/users/${username}`);
+                console.log(user);
+                if (user.message !== undefined) {
+                    document.body.insertAdjacentHTML("beforeend", `
+                        <p>${username} is not found.</p>
+                    `);
+                    return;
+                }
+
+                let events = await get(`https://api.github.com/users/${username}/events`);
+                console.log(events);
+                for (let event of events) {
+                    if (event.type !== "PushEvent") continue;
+
+                    document.body.insertAdjacentHTML("beforeend", `
+                        <img src="${event.actor.avatar_url}" width="32" />
+                        <p>${event.repo.name}</p>
+                        <p>${event.payload.commits[0].message}</p>
+                    `);
+                }
+            }
+
+            // fetchが[[PromiseValue]]とか出てうまくいかん
+            function get(url) {
+                return new Promise((resolve, reject) => {
+                    let request = new XMLHttpRequest();
+                    request.open('GET', url);
+                    request.responseType = 'json';
+                    request.onload = function() {
+                        resolve(request.response);
+                    };
+                    request.onerror = function() {
+                        reject();
+                    };
+                    request.send();
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>GiiitDeck</h1>
+    </body>
 </html>
